@@ -83,7 +83,7 @@ export default function FoodLeaderboard() {
 
   return (
     <div className="space-y-4">
-      <div className="relative border-b border-dashed border-gray-300 pb-2">
+      <div className="sticky top-0 bg-white z-10 border-b border-dashed border-gray-300 pb-2">
         <div className="flex items-center">
           <div className="w-8 bg-white z-10">
             <button
@@ -133,15 +133,17 @@ export default function FoodLeaderboard() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search your city..."
-          className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 text-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="sticky top-12 bg-white z-10">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search your city..."
+            className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-2 text-gray-600 py-2">
