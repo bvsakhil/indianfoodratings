@@ -6,14 +6,14 @@ import CityList from './CityList'
 import AddFoodModal from './AddFoodModal'
 
 const initialFoodItems = [
-  { id: 'dosa', name: 'Dosa', icon: '🥞' },
-  { id: 'biryani', name: 'Biryani', icon: '🍚' },
-  { id: 'samosa', name: 'Samosa', icon: '🔺' },
-  { id: 'pani-puri', name: 'Pani Puri', icon: '🥘' },
-  { id: 'chai', name: 'Chai', icon: '☕' },
-  { id: 'butter-chicken', name: 'Butter Chicken', icon: '🍗' },
-  { id: 'chole-bhature', name: 'Chole Bhature', icon: '🥘' },
-  { id: 'vada-pav', name: 'Vada Pav', icon: '🍔' },
+  { id: 'dosa', name: 'Dosa', votes: 0 },
+  { id: 'biryani', name: 'Biryani', votes: 0 },
+  { id: 'samosa', name: 'Samosa', votes: 0 },
+  { id: 'pani-puri', name: 'Pani Puri', votes: 0 },
+  { id: 'chai', name: 'Chai', votes: 0 },
+  { id: 'butter-chicken', name: 'Butter Chicken', votes: 0 },
+  { id: 'chole-bhature', name: 'Chole Bhature', votes: 0 },
+  { id: 'vada-pav', name: 'Vada Pav', votes: 0 },
 ]
 
 // Function to set a cookie
@@ -28,10 +28,10 @@ const hasCookie = (name: string) => {
 };
 
 // Function to save a vote in local storage
-const saveVoteToLocalStorage = (cityId: string) => {
-    const votes = JSON.parse(localStorage.getItem('votes')) || {};
+const saveVoteToLocalStorage = (foodItemId: string, cityId: string) => {
+    const votes = JSON.parse(localStorage.getItem(`votes_${foodItemId}`)) || {};
     votes[cityId] = (votes[cityId] || 0) + 1; // Increment vote count for the city
-    localStorage.setItem('votes', JSON.stringify(votes));
+    localStorage.setItem(`votes_${foodItemId}`, JSON.stringify(votes));
 };
 
 export default function FoodLeaderboard() {
@@ -46,16 +46,16 @@ export default function FoodLeaderboard() {
   useEffect(() => {
     // Check if window is defined to access localStorage
     if (typeof window !== 'undefined') {
-      const storedVotes = JSON.parse(localStorage.getItem('votes')) || {};
+      const storedVotes = JSON.parse(localStorage.getItem(`votes_${activeTab}`)) || {};
       setVotes(storedVotes);
     }
-  }, []);
+  }, [activeTab]);
 
   const handleAddFood = (newFoodName: string) => {
     const newFood = {
       id: newFoodName.toLowerCase().replace(/\s+/g, '-'),
       name: newFoodName,
-      icon: '🍽️' // Default icon
+      votes: 0 // Initialize votes for new food item
     }
     setFoodItems([...foodItems, newFood])
     setActiveTab(newFood.id)
@@ -72,9 +72,9 @@ export default function FoodLeaderboard() {
   }
 
   const handleVote = (cityId: string) => {
-    if (!hasCookie(`vote_${cityId}`)) {
-        saveVoteToLocalStorage(cityId); // Save vote in local storage
-        setCookie(`vote_${cityId}`, '1', 365); // Set cookie for 1 year
+    if (!hasCookie(`vote_${activeTab}_${cityId}`)) {
+        saveVoteToLocalStorage(activeTab, cityId); // Save vote in local storage
+        setCookie(`vote_${activeTab}_${cityId}`, '1', 365); // Set cookie for 1 year
         alert(`You voted for city ID: ${cityId}`);
     } else {
         alert('You have already voted for this city.');
