@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, Info, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import CityList from './CityList'
 import AddFoodModal from './AddFoodModal'
@@ -17,23 +17,18 @@ const initialFoodItems = [
 ]
 
 // Function to set a cookie
-const setCookie = (name, value, days) => {
+const setCookie = (name: string, value: string, days: number) => {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
     document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 };
 
-// Function to get votes from local storage
-const getVotesFromLocalStorage = () => {
-    return JSON.parse(localStorage.getItem('votes')) || {};
-};
-
 // Function to check if a cookie exists
-const hasCookie = (name) => {
+const hasCookie = (name: string) => {
     return document.cookie.split('; ').some((item) => item.trim().startsWith(`${name}=`));
 };
 
 // Function to save a vote in local storage
-const saveVoteToLocalStorage = (cityId) => {
+const saveVoteToLocalStorage = (cityId: string) => {
     const votes = JSON.parse(localStorage.getItem('votes')) || {};
     votes[cityId] = (votes[cityId] || 0) + 1; // Increment vote count for the city
     localStorage.setItem('votes', JSON.stringify(votes));
@@ -46,6 +41,15 @@ export default function FoodLeaderboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [votes, setVotes] = useState({}) // State to hold votes
+
+  useEffect(() => {
+    // Check if window is defined to access localStorage
+    if (typeof window !== 'undefined') {
+      const storedVotes = JSON.parse(localStorage.getItem('votes')) || {};
+      setVotes(storedVotes);
+    }
+  }, []);
 
   const handleAddFood = (newFoodName: string) => {
     const newFood = {
@@ -67,7 +71,7 @@ export default function FoodLeaderboard() {
     }
   }
 
-  const handleVote = (cityId) => {
+  const handleVote = (cityId: string) => {
     if (!hasCookie(`vote_${cityId}`)) {
         saveVoteToLocalStorage(cityId); // Save vote in local storage
         setCookie(`vote_${cityId}`, '1', 365); // Set cookie for 1 year
@@ -76,8 +80,6 @@ export default function FoodLeaderboard() {
         alert('You have already voted for this city.');
     }
   };
-
-  const votes = getVotesFromLocalStorage();
 
   return (
     <div className="space-y-4">
