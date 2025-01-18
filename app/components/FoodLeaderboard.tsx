@@ -1,15 +1,43 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Info, Plus } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Search, Info, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import CityList from './CityList'
 import AddFoodModal from './AddFoodModal'
 
 const initialFoodItems = [
+  { id: 'dosa', name: 'Dosa', icon: '🥞' },
+  { id: 'biryani', name: 'Biryani', icon: '🍚' },
+  { id: 'samosa', name: 'Samosa', icon: '🔺' },
   { id: 'pani-puri', name: 'Pani Puri', icon: '🥘' },
   { id: 'chai', name: 'Chai', icon: '☕' },
-  { id: 'biryani', name: 'Biryani', icon: '🍚' }
+  { id: 'butter-chicken', name: 'Butter Chicken', icon: '🍗' },
+  { id: 'chole-bhature', name: 'Chole Bhature', icon: '🥘' },
+  { id: 'vada-pav', name: 'Vada Pav', icon: '🍔' },
 ]
+
+// Function to set a cookie
+const setCookie = (name, value, days) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+};
+
+// Function to get votes from local storage
+const getVotesFromLocalStorage = () => {
+    return JSON.parse(localStorage.getItem('votes')) || {};
+};
+
+// Function to check if a cookie exists
+const hasCookie = (name) => {
+    return document.cookie.split('; ').some((item) => item.trim().startsWith(`${name}=`));
+};
+
+// Function to save a vote in local storage
+const saveVoteToLocalStorage = (cityId) => {
+    const votes = JSON.parse(localStorage.getItem('votes')) || {};
+    votes[cityId] = (votes[cityId] || 0) + 1; // Increment vote count for the city
+    localStorage.setItem('votes', JSON.stringify(votes));
+};
 
 export default function FoodLeaderboard() {
   const [foodItems, setFoodItems] = useState(initialFoodItems)
@@ -17,6 +45,7 @@ export default function FoodLeaderboard() {
   const [remainingVotes, setRemainingVotes] = useState(5)
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const handleAddFood = (newFoodName: string) => {
     const newFood = {
@@ -28,37 +57,85 @@ export default function FoodLeaderboard() {
     setActiveTab(newFood.id)
   }
 
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 200
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  const handleVote = (cityId) => {
+    if (!hasCookie(`vote_${cityId}`)) {
+        saveVoteToLocalStorage(cityId); // Save vote in local storage
+        setCookie(`vote_${cityId}`, '1', 365); // Set cookie for 1 year
+        alert(`You voted for city ID: ${cityId}`);
+    } else {
+        alert('You have already voted for this city.');
+    }
+  };
+
+  const votes = getVotesFromLocalStorage();
+
   return (
     <div className="space-y-4">
-      <div className="flex border-b border-dashed border-gray-300 pb-2 overflow-x-auto">
-        {foodItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors mr-2 whitespace-nowrap
-              ${activeTab === item.id 
-                ? 'bg-gray-200 text-gray-800' 
-                : 'text-gray-600 hover:bg-gray-100'
-              }`}
+      <div className="relative border-b border-dashed border-gray-300 pb-2">
+        <div className="flex items-center">
+          <div className="w-8 bg-white z-10">
+            <button
+              onClick={() => scroll('left')}
+              className="p-1 w-full h-full flex items-center justify-center"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-x-auto scrollbar-hide space-x-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            <span>{item.icon}</span>
-            <span>{item.name}</span>
-          </button>
-        ))}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors mr-2 text-gray-600 hover:bg-gray-100"
-        >
-          <Plus size={16} />
-          <span>Add New</span>
-        </button>
+            <div className="flex px-2">
+              {foodItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap mx-1
+                    ${activeTab === item.id 
+                      ? 'bg-gray-200 text-gray-800' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="w-24 bg-white flex items-center justify-end z-10">
+            <button
+              onClick={() => scroll('right')}
+              className="p-1 w-8 h-full flex items-center justify-center"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100"
+            >
+              <Plus size={16} />
+              <span>Add</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <input
           type="text"
-          placeholder="Search by state..."
+          placeholder="Search your city..."
           className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

@@ -2,17 +2,37 @@
 
 import { useState, useEffect } from 'react'
 import CityItem from './CityItem'
+import AddCityModal from './AddCityModal'
+import { Plus } from 'lucide-react'
 
-const indianCities = [
-  'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 
-  'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 
-  'Indore', 'Thane', 'Bhopal', 'Visakhapatnam', 'Pimpri-Chinchwad', 
-  'Patna', 'Vadodara', 'Ghaziabad', 'Ludhiana', 'Agra', 'Nashik', 
-  'Faridabad', 'Meerut', 'Rajkot', 'Kalyan-Dombivli', 'Vasai-Virar', 
-  'Varanasi', 'Srinagar', 'Aurangabad', 'Dhanbad', 'Amritsar', 
-  'Navi Mumbai', 'Allahabad', 'Ranchi', 'Howrah', 'Coimbatore', 
-  'Jabalpur', 'Gwalior', 'Vijayawada', 'Jodhpur', 'Madurai', 'Raipur', 
-  'Kota', 'Guwahati', 'Chandigarh', 'Solapur', 'Hubballi-Dharwad'
+const initialIndianCities = [
+  'Aalo', 'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 
+  'Ajmer', 'Amritsar', 'Asansol', 'Baghmara', 'Baddi', 
+  'Bengaluru', 'Belagavi', 'Belonia', 'Berhampur', 'Bhagalpur', 
+  'Bharatpur', 'Bhopal', 'Bhubaneswar', 'Bikaner', 'Bilaspur', 
+  'Bishnupur', 'Bokaro Steel City', 'Champhai', 'Chennai', 'Churachandpur', 
+  'Coimbatore', 'Cuttack', 'Dehradun', 'Deoghar', 'Dhanbad', 
+  'Dharamshala', 'Dharmanagar', 'Dibrugarh', 'Dimapur', 'Durg-Bhilai Nagar', 
+  'Durgapur', 'Faridabad', 'Gangtok', 'Gaya', 'Ghaziabad', 
+  'Guntur', 'Guwahati', 'Gwalior', 'Gyalshing', 'Haldwani', 
+  'Haridwar', 'Howrah', 'Hubballi-Dharwad', 'Hyderabad', 'Imphal', 
+  'Indore', 'Itanagar', 'Jabalpur', 'Jaipur', 'Jalandhar', 
+  'Jamshedpur', 'Jodhpur', 'Jorhat', 'Kanpur', 'Kailashahar', 
+  'Karimnagar', 'Khammam', 'Kochi', 'Kolkata', 'Kollam', 
+  'Kota', 'Kozhikode', 'Kurnool', 'Lucknow', 'Ludhiana', 
+  'Lunglei', 'Madurai', 'Mangaluru', 'Mangan', 'Margao', 
+  'Mapusa', 'Muzaffarpur', 'Mumbai', 'Mysuru', 'Naharlagun', 
+  'Nagaon', 'Nagpur', 'Namchi', 'Nashik', 'Nellore', 
+  'Nizamabad', 'Nongstoin', 'Panaji', 'Panipat', 'Pasighat', 
+  'Patiala', 'Patna', 'Ponda', 'Pune', 'Purnia', 
+  'Raipur', 'Rajkot', 'Rajnandgaon', 'Ranchi', 'Roorkee', 
+  'Rourkela', 'Rudrapur', 'Saiha', 'Salem', 'Sambalpur', 
+  'Serchhip', 'Shillong', 'Shimla', 'Siliguri', 'Singtam', 
+  'Solan', 'Surat', 'Tawang', 'Thane', 'Thiruvananthapuram', 
+  'Thoubal', 'Thrissur', 'Tiruchirappalli', 'Tura', 'Tuensang', 
+  'Udaipur', 'Ujjain', 'Ukhrul', 'Vadodara', 'Varanasi', 
+  'Vasco da Gama', 'Vijayawada', 'Visakhapatnam', 'Warangal', 'Wokha', 
+  'Yamunanagar'
 ]
 
 interface CityListProps {
@@ -25,14 +45,18 @@ export default function CityList({ foodItem, searchTerm, onVoteUsed }: CityListP
   const [votes, setVotes] = useState<{[key: string]: number}>({})
   const [voteCounts, setVoteCounts] = useState<{[key: string]: number}>({})
   const [userVotes, setUserVotes] = useState<string[]>([])
+  const [cities, setCities] = useState<string[]>(initialIndianCities)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     const storedVotes = localStorage.getItem(`votes_${foodItem}`)
     const storedVoteCounts = localStorage.getItem(`voteCounts_${foodItem}`)
     const storedUserVotes = localStorage.getItem(`userVotes_${foodItem}`)
+    const storedCities = localStorage.getItem('indianCities')
     if (storedVotes) setVotes(JSON.parse(storedVotes))
     if (storedVoteCounts) setVoteCounts(JSON.parse(storedVoteCounts))
     if (storedUserVotes) setUserVotes(JSON.parse(storedUserVotes))
+    if (storedCities) setCities(JSON.parse(storedCities))
   }, [foodItem])
 
   const handleVote = (city: string, rating: number) => {
@@ -57,7 +81,15 @@ export default function CityList({ foodItem, searchTerm, onVoteUsed }: CityListP
     }
   }
 
-  const filteredCities = indianCities.filter(city => 
+  const handleAddCity = (newCity: string) => {
+    if (!cities.includes(newCity)) {
+      const updatedCities = [...cities, newCity]
+      setCities(updatedCities)
+      localStorage.setItem('indianCities', JSON.stringify(updatedCities))
+    }
+  }
+
+  const filteredCities = cities.filter(city => 
     city.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -81,6 +113,23 @@ export default function CityList({ foodItem, searchTerm, onVoteUsed }: CityListP
           userVoted={userVotes.includes(city)}
         />
       ))}
+      {filteredCities.length === 0 && (
+        <div className="text-center py-4">
+          <p className="text-gray-500 mb-2">No cities found. Add a new city?</p>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-center w-full gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+          >
+            <Plus size={16} />
+            <span>Add New City</span>
+          </button>
+        </div>
+      )}
+      <AddCityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddCity}
+      />
     </div>
   )
 }
