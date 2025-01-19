@@ -6,33 +6,45 @@ import CityList from './CityList'
 import AddFoodModal from './AddFoodModal'
 
 const initialFoodItems = [
-  { id: 'dosa', name: 'Dosa', votes: 0 },
-  { id: 'biryani', name: 'Biryani', votes: 0 },
-  { id: 'samosa', name: 'Samosa', votes: 0 },
-  { id: 'pani-puri', name: 'Pani Puri', votes: 0 },
-  { id: 'chai', name: 'Chai', votes: 0 },
-  { id: 'butter-chicken', name: 'Butter Chicken', votes: 0 },
-  { id: 'chole-bhature', name: 'Chole Bhature', votes: 0 },
-  { id: 'vada-pav', name: 'Vada Pav', votes: 0 },
+  { id: 'pani-puri', name: 'Pani Puri', icon: '🥘' },
+  { id: 'chai', name: 'Chai', icon: '☕' },
+  { id: 'biryani', name: 'Biryani', icon: '🍚' },
+  { id: 'dosa', name: 'Dosa', icon: '🥞' },
+  { id: 'samosa', name: 'Samosa', icon: '🔺' },
+  { id: 'butter-chicken', name: 'Butter Chicken', icon: '🍗' },
+  { id: 'chole-bhature', name: 'Chole Bhature', icon: '🥘' },
+  { id: 'vada-pav', name: 'Vada Pav', icon: '🍔' },
 ]
 
-// Function to set a cookie
-const setCookie = (name: string, value: string, days: number) => {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-};
-
-// Function to check if a cookie exists
-const hasCookie = (name: string) => {
-    return document.cookie.split('; ').some((item) => item.trim().startsWith(`${name}=`));
-};
-
-// Function to save a vote in local storage
-const saveVoteToLocalStorage = (foodItemId: string, cityId: string) => {
-    const votes = JSON.parse(localStorage.getItem(`votes_${foodItemId}`)) || {};
-    votes[cityId] = (votes[cityId] || 0) + 1; // Increment vote count for the city
-    localStorage.setItem(`votes_${foodItemId}`, JSON.stringify(votes));
-};
+const initialCities = [
+  'Aalo', 'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 
+  'Ajmer', 'Amritsar', 'Asansol', 'Baghmara', 'Baddi', 
+  'Bengaluru', 'Belagavi', 'Belonia', 'Berhampur', 'Bhagalpur', 
+  'Bharatpur', 'Bhopal', 'Bhubaneswar', 'Bikaner', 'Bilaspur', 
+  'Bishnupur', 'Bokaro Steel City', 'Champhai', 'Chennai', 'Churachandpur', 
+  'Coimbatore', 'Cuttack', 'Dehradun', 'Deoghar', 'Dhanbad', 
+  'Dharamshala', 'Dharmanagar', 'Dibrugarh', 'Dimapur', 'Durg-Bhilai Nagar', 
+  'Durgapur', 'Faridabad', 'Gangtok', 'Gaya', 'Ghaziabad', 
+  'Guntur', 'Guwahati', 'Gwalior', 'Gyalshing', 'Haldwani', 
+  'Haridwar', 'Howrah', 'Hubballi-Dharwad', 'Hyderabad', 'Imphal', 
+  'Indore', 'Itanagar', 'Jabalpur', 'Jaipur', 'Jalandhar', 
+  'Jamshedpur', 'Jodhpur', 'Jorhat', 'Kanpur', 'Kailashahar', 
+  'Karimnagar', 'Khammam', 'Kochi', 'Kolkata', 'Kollam', 
+  'Kota', 'Kozhikode', 'Kurnool', 'Lucknow', 'Ludhiana', 
+  'Lunglei', 'Madurai', 'Mangaluru', 'Mangan', 'Margao', 
+  'Mapusa', 'Muzaffarpur', 'Mumbai', 'Mysuru', 'Naharlagun', 
+  'Nagaon', 'Nagpur', 'Namchi', 'Nashik', 'Nellore', 
+  'Nizamabad', 'Nongstoin', 'Panaji', 'Panipat', 'Pasighat', 
+  'Patiala', 'Patna', 'Ponda', 'Pune', 'Purnia', 
+  'Raipur', 'Rajkot', 'Rajnandgaon', 'Ranchi', 'Roorkee', 
+  'Rourkela', 'Rudrapur', 'Saiha', 'Salem', 'Sambalpur', 
+  'Serchhip', 'Shillong', 'Shimla', 'Siliguri', 'Singtam', 
+  'Solan', 'Surat', 'Tawang', 'Thane', 'Thiruvananthapuram', 
+  'Thoubal', 'Thrissur', 'Tiruchirappalli', 'Tura', 'Tuensang', 
+  'Udaipur', 'Ujjain', 'Ukhrul', 'Vadodara', 'Varanasi', 
+  'Vasco da Gama', 'Vijayawada', 'Visakhapatnam', 'Warangal', 'Wokha', 
+  'Yamunanagar'
+]
 
 export default function FoodLeaderboard() {
   const [foodItems, setFoodItems] = useState(initialFoodItems)
@@ -41,24 +53,79 @@ export default function FoodLeaderboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [votes, setVotes] = useState({}) // State to hold votes
 
   useEffect(() => {
-    // Check if window is defined to access localStorage
-    if (typeof window !== 'undefined') {
-      const storedVotes = JSON.parse(localStorage.getItem(`votes_${activeTab}`)) || {};
-      setVotes(storedVotes);
+    const storedFoodItems = localStorage.getItem('foodItems')
+    const storedCities = localStorage.getItem('cities')
+    
+    if (!storedFoodItems) {
+      localStorage.setItem('foodItems', JSON.stringify(initialFoodItems.map(item => item.id)))
     }
+    
+    let cities = initialCities
+    if (storedCities) {
+      const parsedStoredCities = JSON.parse(storedCities)
+      cities = Array.from(new Set([...parsedStoredCities, ...initialCities]))
+    }
+    localStorage.setItem('cities', JSON.stringify(cities))
+
+    // Initialize leaderboards for all food items and cities
+    const foodItemIds = JSON.parse(storedFoodItems || JSON.stringify(initialFoodItems.map(item => item.id)))
+
+    foodItemIds.forEach((foodItem: string) => {
+      let votes = {}
+      let voteCounts = {}
+      const storedVotes = localStorage.getItem(`votes_${foodItem}`)
+      const storedVoteCounts = localStorage.getItem(`voteCounts_${foodItem}`)
+
+      if (storedVotes && storedVoteCounts) {
+        votes = JSON.parse(storedVotes)
+        voteCounts = JSON.parse(storedVoteCounts)
+      }
+
+      cities.forEach((city: string) => {
+        if (!(city in votes)) {
+          votes[city] = 0
+        }
+        if (!(city in voteCounts)) {
+          voteCounts[city] = 0
+        }
+      })
+
+      localStorage.setItem(`votes_${foodItem}`, JSON.stringify(votes))
+      localStorage.setItem(`voteCounts_${foodItem}`, JSON.stringify(voteCounts))
+    })
+  }, [])
+
+  useEffect(() => {
+    const storedUserVotes = localStorage.getItem(`userVotes_${activeTab}`)
+    const userVotes = storedUserVotes ? JSON.parse(storedUserVotes) : []
+    setRemainingVotes(5 - userVotes.length)
   }, [activeTab]);
 
   const handleAddFood = (newFoodName: string) => {
     const newFood = {
       id: newFoodName.toLowerCase().replace(/\s+/g, '-'),
       name: newFoodName,
-      votes: 0 // Initialize votes for new food item
+      icon: '🍽️' // Default icon
     }
-    setFoodItems([...foodItems, newFood])
+    const updatedFoodItems = [...foodItems, newFood]
+    setFoodItems(updatedFoodItems)
     setActiveTab(newFood.id)
+
+    // Update foodItems in localStorage
+    localStorage.setItem('foodItems', JSON.stringify(updatedFoodItems.map(item => item.id)))
+
+    // Initialize leaderboard for the new food item
+    const cities = JSON.parse(localStorage.getItem('cities') || '[]')
+    const initialVotes: {[key: string]: number} = {}
+    const initialVoteCounts: {[key: string]: number} = {}
+    cities.forEach((city: string) => {
+      initialVotes[city] = 0
+      initialVoteCounts[city] = 0
+    })
+    localStorage.setItem(`votes_${newFood.id}`, JSON.stringify(initialVotes))
+    localStorage.setItem(`voteCounts_${newFood.id}`, JSON.stringify(initialVoteCounts))
   }
 
   const scroll = (direction: 'left' | 'right') => {
@@ -71,19 +138,9 @@ export default function FoodLeaderboard() {
     }
   }
 
-  const handleVote = (cityId: string) => {
-    if (!hasCookie(`vote_${activeTab}_${cityId}`)) {
-        saveVoteToLocalStorage(activeTab, cityId); // Save vote in local storage
-        setCookie(`vote_${activeTab}_${cityId}`, '1', 365); // Set cookie for 1 year
-        alert(`You voted for city ID: ${cityId}`);
-    } else {
-        alert('You have already voted for this city.');
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <div className="sticky top-0 bg-white z-10 border-b border-dashed border-gray-300 pb-2">
+      <div className="relative border-b border-dashed border-gray-300 pb-2">
         <div className="flex items-center">
           <div className="w-8 bg-white z-10">
             <button
@@ -133,28 +190,28 @@ export default function FoodLeaderboard() {
         </div>
       </div>
 
-      <div className="sticky top-12 bg-white z-10">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search your city..."
-            className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search by state..."
+          className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 text-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       <div className="flex items-center gap-2 text-gray-600 py-2">
         <Info className="w-4 h-4" />
-        <span className="text-xs">{remainingVotes} votes remaining</span>
+        <span className="text-xs">{remainingVotes} votes remaining for {foodItems.find(item => item.id === activeTab)?.name}</span>
       </div>
 
       <CityList 
         foodItem={activeTab} 
         searchTerm={searchTerm}
         onVoteUsed={() => setRemainingVotes(prev => Math.max(0, prev - 1))} 
+        remainingVotes={remainingVotes}
+        setRemainingVotes={setRemainingVotes}
       />
 
       <AddFoodModal

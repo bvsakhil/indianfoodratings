@@ -9,15 +9,21 @@ interface CityItemProps {
   voteCount: number
   onVote: (rating: number) => void
   userVoted: boolean
+  remainingVotes: number
+  canVote: boolean
 }
 
-export default function CityItem({ city, rank, foodItem, votes, voteCount, onVote, userVoted }: CityItemProps) {
+export default function CityItem({ city, rank, foodItem, votes, voteCount, onVote, userVoted, remainingVotes, canVote }: CityItemProps) {
   const [hoveredRating, setHoveredRating] = useState(0)
 
   const handleVote = (rating: number) => {
-    if (!userVoted) {
+    if (canVote) {
       onVote(rating)
       setHoveredRating(0)
+    } else if (userVoted) {
+      alert(`You have already voted for ${city} in this category!`)
+    } else {
+      alert(`You have used all your votes for ${foodItem}. Try voting for other food items!`)
     }
   }
 
@@ -32,22 +38,24 @@ export default function CityItem({ city, rank, foodItem, votes, voteCount, onVot
           {votes > 0 ? `${(votes / 10).toFixed(1)}` : '0.0'}
         </span>
         <span className="text-xs text-gray-400">({voteCount})</span>
-        {!userVoted && (
-          <div className="flex">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className={`w-4 h-4 cursor-pointer transition-colors ${
-                  star <= hoveredRating ? 'text-gray-600' : 'text-gray-300'
-                }`}
-                fill={star <= hoveredRating ? 'currentColor' : 'none'}
-                onMouseEnter={() => setHoveredRating(star)}
-                onMouseLeave={() => setHoveredRating(0)}
-                onClick={() => handleVote(star * 2)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              className={`w-4 h-4 cursor-pointer transition-colors ${
+                userVoted && votes / 2 >= star
+                  ? 'text-gray-600'
+                  : star <= hoveredRating && canVote
+                  ? 'text-gray-600'
+                  : 'text-gray-300'
+              }`}
+              fill={userVoted && votes / 2 >= star ? 'currentColor' : star <= hoveredRating && canVote ? 'currentColor' : 'none'}
+              onMouseEnter={() => canVote && setHoveredRating(star)}
+              onMouseLeave={() => canVote && setHoveredRating(0)}
+              onClick={() => handleVote(star * 2)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
