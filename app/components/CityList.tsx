@@ -4,18 +4,26 @@ import { useState, useEffect } from 'react'
 import CityItem from './CityItem'
 import AddCityModal from './AddCityModal'
 import { Plus } from 'lucide-react'
+import React from 'react'
+
+// Define the type for votes and vote counts
+type Votes = {
+  [cityId: string]: number; // Each city ID maps to a vote count
+};
 
 interface CityListProps {
   foodItem: string
   searchTerm: string
   onVoteUsed: () => void
   remainingVotes: number
+  setRemainingVotes: React.Dispatch<React.SetStateAction<number>>
+  onVote: (cityId: string) => void
 }
 
-export default function CityList({ foodItem, searchTerm, onVoteUsed, remainingVotes }: CityListProps) {
+export default function CityList({ foodItem, searchTerm, onVoteUsed, remainingVotes, setRemainingVotes, onVote }: CityListProps) {
   const [cities, setCities] = useState<string[]>([])
-  const [votes, setVotes] = useState<{[key: string]: number}>({})
-  const [voteCounts, setVoteCounts] = useState<{[key: string]: number}>({})
+  const [votes, setVotes] = useState<Votes>({})
+  const [voteCounts, setVoteCounts] = useState<Votes>({})
   const [userVotes, setUserVotes] = useState<string[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
 

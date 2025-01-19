@@ -46,6 +46,29 @@ const initialCities = [
   'Yamunanagar'
 ]
 
+// Define the type for votes
+type Votes = {
+  [cityId: string]: number; // Each city ID maps to a vote count
+};
+
+// Function to set a cookie
+const setCookie = (name: string, value: string, days: number) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+};
+
+// Function to check if a cookie exists
+const hasCookie = (name: string) => {
+    return document.cookie.split('; ').some((item) => item.trim().startsWith(`${name}=`));
+};
+
+// Function to save a vote in local storage
+const saveVoteToLocalStorage = (foodItemId: string, cityId: string) => {
+    const votes: Votes = JSON.parse(localStorage.getItem(`votes_${foodItemId}`) || '{}'); // Provide a default value
+    votes[cityId] = (votes[cityId] || 0) + 1; // Increment vote count for the city
+    localStorage.setItem(`votes_${foodItemId}`, JSON.stringify(votes));
+};
+
 export default function FoodLeaderboard() {
   const [foodItems, setFoodItems] = useState(initialFoodItems)
   const [activeTab, setActiveTab] = useState(foodItems[0].id)
@@ -53,6 +76,7 @@ export default function FoodLeaderboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [votes, setVotes] = useState<Votes>({}) // State to hold votes for the active food item
 
   useEffect(() => {
     const storedFoodItems = localStorage.getItem('foodItems')
@@ -73,8 +97,8 @@ export default function FoodLeaderboard() {
     const foodItemIds = JSON.parse(storedFoodItems || JSON.stringify(initialFoodItems.map(item => item.id)))
 
     foodItemIds.forEach((foodItem: string) => {
-      let votes = {}
-      let voteCounts = {}
+      let votes: Votes = {}
+      let voteCounts: Votes = {}
       const storedVotes = localStorage.getItem(`votes_${foodItem}`)
       const storedVoteCounts = localStorage.getItem(`voteCounts_${foodItem}`)
 
@@ -101,6 +125,14 @@ export default function FoodLeaderboard() {
     const storedUserVotes = localStorage.getItem(`userVotes_${activeTab}`)
     const userVotes = storedUserVotes ? JSON.parse(storedUserVotes) : []
     setRemainingVotes(5 - userVotes.length)
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Check if window is defined to access localStorage
+    if (typeof window !== 'undefined') {
+      const storedVotes: Votes = JSON.parse(localStorage.getItem(`votes_${activeTab}`) || '{}'); // Ensure type is Votes
+      setVotes(storedVotes);
+    }
   }, [activeTab]);
 
   const handleAddFood = (newFoodName: string) => {
@@ -137,6 +169,22 @@ export default function FoodLeaderboard() {
       })
     }
   }
+
+  const handleVote = (cityId: string) => {
+    if (!hasCookie(`vote_${activeTab}_${cityId}`)) {
+        saveVoteToLocalStorage(activeTab, cityId); // Save vote in local storage
+        setCookie(`vote_${activeTab}_${cityId}`, '1', 365); // Set cookie for 1 year
+        alert(`You voted for city ID: ${cityId}`);
+        
+        // Update local votes state
+        setVotes((prevVotes) => ({
+          ...prevVotes,
+          [cityId]: (prevVotes[cityId] || 0) + 1,
+        }));
+    } else {
+        alert('You have already voted for this city.');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -212,6 +260,7 @@ export default function FoodLeaderboard() {
         onVoteUsed={() => setRemainingVotes(prev => Math.max(0, prev - 1))} 
         remainingVotes={remainingVotes}
         setRemainingVotes={setRemainingVotes}
+        onVote={handleVote}
       />
 
       <AddFoodModal
