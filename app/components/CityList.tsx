@@ -5,6 +5,7 @@ import CityItem from './CityItem'
 import AddCityModal from './AddCityModal'
 import { Plus } from 'lucide-react'
 import React from 'react'
+import { supabase } from '../lib/supabaseClient'
 
 // Define the type for votes and vote counts
 type Votes = {
@@ -38,7 +39,7 @@ export default function CityList({ foodItem, searchTerm, onVoteUsed, remainingVo
     if (storedUserVotes) setUserVotes(JSON.parse(storedUserVotes))
   }, [foodItem])
 
-  const handleVote = (city: string, rating: number) => {
+  const handleVote = async (city: string, rating: number) => {
     if (userVotes.length >= 5 && !userVotes.includes(city)) {
       alert(`You can only vote for up to 5 cities for ${foodItem}!`)
       return
@@ -60,6 +61,18 @@ export default function CityList({ foodItem, searchTerm, onVoteUsed, remainingVo
     const newUserVotes = [...userVotes, city]
     setUserVotes(newUserVotes)
     localStorage.setItem(`userVotes_${foodItem}`, JSON.stringify(newUserVotes))
+
+    // Store vote in Supabase
+    const { data, error } = await supabase
+      .from('votes')
+      .upsert({ food_item_id: foodItem, city_id: city, vote_count: rating })
+
+    if (error) {
+      console.error('Error saving vote to Supabase:', error)
+    } else {
+      console.log('Vote saved to Supabase:', data)
+    }
+
     onVoteUsed()
   }
 
