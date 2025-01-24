@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from './supabaseClient';
+
+// Define the type for the vote data
+interface Vote {
+    id: string;
+    food_item_id: string;
+    city_id: string;
+    vote_count: number;
+}
 
 const GlobalLeaderboard = () => {
-    const [votes, setVotes] = useState([]);
+    const [votes, setVotes] = useState<Vote[]>([]); // Specify the type here
 
     useEffect(() => {
         const fetchVotes = async () => {

@@ -5,9 +5,9 @@ import CityItem from './CityItem'
 import AddCityModal from './AddCityModal'
 import { Plus } from 'lucide-react'
 import React from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from './supabaseClient'
 
-// Define the type for votes and vote counts
+// Define the type for votesand vote counts
 type Votes = {
   [cityId: string]: number; // Each city ID maps to a vote count
 };
