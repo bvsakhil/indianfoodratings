@@ -15,12 +15,18 @@ const GlobalLeaderboard = () => {
         const fetchVotes = async () => {
             const { data, error } = await supabase
                 .from('votes')
-                .select('city_id, food_item_id, sum(vote_count) as total_votes');
+                .select('city_id, food_item_id, avg(vote_count) as total_votes', { count: 'exact' })
+                .eq('group', 'city_id, food_item_id');
 
             if (error) {
                 console.error('Error fetching votes:', error);
             } else {
-                setVotes(data as unknown as Vote[]);
+                // Ensure total_votes is an integer
+                const formattedData = data.map((vote: any) => ({
+                    ...vote,
+                    total_votes: Math.round(vote.total_votes)
+                }));
+                setVotes(formattedData as Vote[]);
             }
         };
 

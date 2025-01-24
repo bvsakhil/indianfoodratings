@@ -35,7 +35,7 @@ export default function CityItem({ city, rank, foodItem, votes, voteCount, onVot
       </div>
       <div className="flex items-center space-x-2">
         <span className="text-xs text-gray-500">
-          {votes > 0 ? `${(votes / 10).toFixed(1)}` : '0.0'}
+          {votes > 0 ? `${(votes)}` : '0'}
         </span>
         <span className="text-xs text-gray-400">({voteCount})</span>
         <div className="flex">
