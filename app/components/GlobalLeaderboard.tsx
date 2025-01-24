@@ -3,25 +3,24 @@ import { supabase } from './supabaseClient';
 
 // Define the type for the vote data
 interface Vote {
-    id: string;
-    food_item_id: string;
     city_id: string;
-    vote_count: number;
+    food_item_id: string;
+    total_votes: number;
 }
 
 const GlobalLeaderboard = () => {
-    const [votes, setVotes] = useState<Vote[]>([]); // Specify the type here
+    const [votes, setVotes] = useState<Vote[]>([]);
 
     useEffect(() => {
         const fetchVotes = async () => {
             const { data, error } = await supabase
                 .from('votes')
-                .select('*');
+                .select('city_id, food_item_id, sum(vote_count) as total_votes');
 
             if (error) {
                 console.error('Error fetching votes:', error);
             } else {
-                setVotes(data);
+                setVotes(data as unknown as Vote[]);
             }
         };
 
@@ -33,8 +32,8 @@ const GlobalLeaderboard = () => {
             <h2>Global Leaderboard</h2>
             <ul>
                 {votes.map((vote) => (
-                    <li key={vote.id}>
-                        {vote.city_id}: {vote.vote_count} votes for {vote.food_item_id}
+                    <li key={`${vote.city_id}-${vote.food_item_id}`}>
+                        {vote.city_id}: {vote.total_votes} votes for {vote.food_item_id}
                     </li>
                 ))}
             </ul>
